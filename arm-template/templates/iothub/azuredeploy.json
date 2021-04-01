@@ -1,0 +1,85 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "iotHubName": {
+      "defaultValue": "kakaiothub",
+      "type": "String",
+      "metadata": {
+        "description": "Specify the name of the Iot hub."
+      }
+    },
+    "newOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "allowedValues": [
+        "new",
+        "existing"
+      ]
+    },
+    "location": {
+      "defaultValue": "[resourceGroup().location]",
+      "type": "String",
+      "metadata": {
+        "description": "Specify the location of the resources."
+      }
+    },
+    "skuName": {
+      "defaultValue": "S1",
+      "type": "String",
+      "metadata": {
+        "description": "The SKU to use for the IoT Hub. (If Iot Hub is existed then you can ignore this item)"
+      }
+    },
+    "skuUnits": {
+      "defaultValue": "1",
+      "type": "String",
+      "metadata": {
+        "description": "The number of IoT Hub units. (If Iot Hub is existed then you can ignore this item)"
+      }
+    },
+    "provisioningServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the name of the provisioning service."
+      }
+    }
+  },
+  "variables": {
+    "iotHubKeyName": "iothubowner"
+  },
+  "resources": [
+    {
+      "condition": "[equals(parameters('newOrExisting'), 'new')]",
+      "type": "Microsoft.Devices/IotHubs",
+      "apiVersion": "2020-03-01",
+      "name": "[parameters('iotHubName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "capacity": "[parameters('skuUnits')]"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Devices/provisioningServices",
+      "apiVersion": "2020-01-01",
+      "name": "[parameters('provisioningServiceName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "capacity": "[parameters('skuUnits')]"
+      },
+      "dependsOn": [ "[parameters('iotHubName')]" ],
+      "properties": {
+        "iotHubs": [
+          {
+            "connectionString": "[concat('HostName=', reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName, ';SharedAccessKeyName=', variables('iotHubKeyName'), ';SharedAccessKey=', listkeys(resourceId('Microsoft.Devices/Iothubs/Iothubkeys', parameters('iotHubName'), variables('iotHubKeyName')), '2020-03-01').primaryKey)]",
+            "location": "[parameters('location')]",
+            "name": "[reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName]"
+          }
+        ]
+      }
+    }
+  ]
+}
