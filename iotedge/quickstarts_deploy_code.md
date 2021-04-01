@@ -120,7 +120,7 @@ template: [iotedge-vm-deploy/edgeDeploy.json](https://github.com/Azure/iotedge-v
 
 ```bash
 $ az deployment group create \
---resource-group IoTEdgeResources \
+--resource-group <RESOURCE_GROUP_NAME> \
 --template-uri "https://aka.ms/iotedge-vm-deploy" \
 --parameters dnsLabelPrefix='<REPLACE_WITH_VM_NAME>' \
 --parameters adminUsername='azureUser' \
@@ -132,11 +132,11 @@ $ az deployment group create \
 $ az deployment group create \
 --resource-group IoTEdgeResources \
 --template-uri "https://aka.ms/iotedge-vm-deploy" \
---parameters dnsLabelPrefix='kaka-edge-vm1' \
+--parameters dnsLabelPrefix='kaka-edge-vm' \
 --parameters adminUsername='azureUser' \
 --parameters deviceConnectionString=$(az iot hub device-identity connection-string show --device-id kakaEdgeDevice --hub-name kakaiothub -o tsv) \
 --parameters authenticationType='password' \
---parameters adminPasswordOrKey="password"
+--parameters adminPasswordOrKey="Password123@"
 ```
 
 *Once the deployment is complete, you should receive JSON-formatted output in the CLI that contains the SSH information to connect to the virtual machine. Copy the value of the public SSH entry of the outputs section:*
@@ -168,7 +168,7 @@ Once connected to your virtual machine, verify that the runtime was successfully
     $ journalctl -u iotedge
     ```
 
-3. View all the modules running on your IoT Edge device. *The edgeAgent module runs by default.*
+3. View all the modules running on your IoT Edge device. `Since the service just started for the first time, you should only see the edgeAgent module running`. *The edgeAgent module runs by default and helps to install and start any additional modules that you deploy to your device.*
 
     ```bash
     $ sudo iotedge list
@@ -176,9 +176,6 @@ Once connected to your virtual machine, verify that the runtime was successfully
 
     ![](images/iotedge_list.png)
 
-    Note:
-
-    > You should only have `edgeAgent` and `edgeHub` before you deploy `SimulatedTemperatureSensor` module
 
 ## 6. Deploy a module
 
@@ -198,7 +195,7 @@ Tutorials: [Deploy a module from the cloud](https://docs.microsoft.com/en-us/azu
 $ sudo iotedge list
 ```
 
-![](images/iotedge_list.png)
+![](images/iotedge_list2.png)
 
 View the messages being sent from the temperature sensor module:
 
