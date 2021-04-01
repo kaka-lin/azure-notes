@@ -133,3 +133,13 @@ $ sudo iotedge list
 ```
 
 ![](images/iotedge_list.png)
+
+## 5. View generated data
+
+View the messages being sent from the temperature sensor module:
+
+```bash
+$ sudo iotedge logs SimulatedTemperatureSensor -f
+```
+
+![](images/temperature_sensor_module_message.png)
