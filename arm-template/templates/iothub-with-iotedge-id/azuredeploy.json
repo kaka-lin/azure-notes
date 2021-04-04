@@ -1,0 +1,126 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "iotHubName": {
+      "defaultValue": "kakaiothub",
+      "type": "String",
+      "metadata": {
+        "description": "Specify the name of the Iot hub."
+      }
+    },
+    "newOrExisting": {
+      "type": "string",
+      "defaultValue": "new",
+      "allowedValues": [
+        "new",
+        "existing"
+      ]
+    },
+    "iotEdgeDeviceName": {
+      "defaultValue": "kakaEdgeDevice",
+      "type": "String",
+      "metadata": {
+        "description": "Specify the name of the Iot Edge Device."
+      }
+    },
+    "location": {
+      "defaultValue": "[resourceGroup().location]",
+      "type": "String",
+      "metadata": {
+        "description": "Specify the location of the resources."
+      }
+    },
+    "skuName": {
+      "defaultValue": "S1",
+      "type": "String",
+      "metadata": {
+        "description": "The SKU to use for the IoT Hub. (If Iot Hub is existed then you can ignore this item)"
+      }
+    },
+    "skuUnits": {
+      "defaultValue": "1",
+      "type": "String",
+      "metadata": {
+        "description": "The number of IoT Hub units. (If Iot Hub is existed then you can ignore this item)"
+      }
+    }
+  },
+  "variables": {
+    "resourceGroupName": "[resourceGroup().name]",
+    "managedIdentityName": "[concat('Managed_Identity',substring(uniqueString(subscription().id,variables('resourceGroupName')),1,4))]",
+    "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+    "roleDefinitionName": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName')), variables('roleDefinitionId'), resourceGroup().id)]"
+  },
+  "resources": [
+    {
+      "condition": "[equals(parameters('newOrExisting'), 'new')]",
+      "type": "Microsoft.Devices/IotHubs",
+      "apiVersion": "2020-03-01",
+      "name": "[parameters('iotHubName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('skuName')]",
+        "capacity": "[parameters('skuUnits')]"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "[variables('managedIdentityName')]",
+      "apiVersion": "2018-11-30",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[variables('roleDefinitionName')]",
+      "dependsOn": [
+          "[variables('managedIdentityName')]"
+      ],
+      "properties": {
+          "roleDefinitionId": "[variables('roleDefinitionId')]",
+          "principalId": "[reference(variables('managedIdentityName')).principalId]",
+          "scope": "[resourceGroup().id]",
+          "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2019-10-01-preview",
+      "name": "createIotEdgeEeviceId",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('roleDefinitionName')]",
+        "[resourceId('Microsoft.Devices/IotHubs', parameters('iotHubName'))]"
+      ],
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]": {}
+        }
+      },
+      "kind": "AzureCLI",
+      "properties": {
+        "forceUpdateTag": "1",
+        "azCliVersion": "2.9.1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/kaka-lin/azure-notes/creat-edgedevice/arm-template/templates/iothub-with-iotedge-id/scripts/create.sh",
+        "supportingScriptUris": [],
+        "environmentVariables": [
+          {
+            "name": "IoTHubName",
+            "value": "[parameters('iotHubName')]"
+          },
+          {
+            "name": "IoTEdgeDeviceId",
+            "value": "[parameters('iotEdgeDeviceName')]"
+          }
+        ],
+        "retentionInterval": "P1D",
+        "timeout": "PT15M",
+        "containerSettings": {},
+        "cleanupPreference": "OnSuccess"
+      }
+    }
+  ]
+}
