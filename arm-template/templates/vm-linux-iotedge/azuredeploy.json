@@ -3,96 +3,109 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "vmName": {
-      "type": "string",
-      "defaultValue": "KakaIoTEdgeVM",
-      "metadata": {
-        "description": "The name of you Virtual Machine."
-      }
+        "defaultValue": "KakaIoTEdgeVM",
+        "type": "String",
+        "metadata": {
+            "description": "The name of you Virtual Machine."
+        }
     },
     "location": {
-      "type": "string",
         "defaultValue": "[resourceGroup().location]",
+        "type": "String",
         "metadata": {
-          "description": "Location for all resources."
-      }
+            "description": "Location for all resources."
+        }
     },
     "ubuntuOSVersion": {
-      "type": "string",
-      "defaultValue": "18.04-LTS",
-      "allowedValues": [
-        "16.04.0-LTS",
-        "18.04-LTS"
-      ],
-      "metadata": {
-        "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
-      }
+        "defaultValue": "18.04-LTS",
+        "allowedValues": [
+            "16.04.0-LTS",
+            "18.04-LTS"
+        ],
+        "type": "String",
+        "metadata": {
+            "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
+        }
     },
     "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_DS1_v2",
-      "metadata": {
-        "description": "The size of the VM"
-      }
+        "defaultValue": "Standard_DS1_v2",
+        "type": "String",
+        "metadata": {
+            "description": "The size of the VM"
+        }
     },
     "adminUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Username for the Virtual Machine."
-      }
+        "defaultValue": "kaka",
+        "type": "String",
+        "metadata": {
+            "description": "Username for the Virtual Machine."
+        }
     },
     "authenticationType": {
-      "type": "string",
-      "defaultValue": "password",
-      "allowedValues": [
-        "sshPublicKey",
-        "password"
-      ],
-      "metadata": {
-        "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
-      }
+        "defaultValue": "password",
+        "allowedValues": [
+            "sshPublicKey",
+            "password"
+        ],
+        "type": "String",
+        "metadata": {
+            "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
+        }
     },
     "adminPasswordOrKey": {
-      "type": "securestring",
-      "metadata": {
-        "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
-      }
+        "defaultValue": "Password123@",
+        "type": "SecureString",
+        "metadata": {
+            "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
+        }
     },
     "dnsLabelPrefix": {
-      "type": "string",
-      "defaultValue": "[toLower(concat('kakaiotedgevm-', uniqueString(resourceGroup().id)))]",
-      "metadata": {
-        "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
-      }
+        "defaultValue": "[toLower(concat('kakaiotedgevm-', uniqueString(resourceGroup().id)))]",
+        "type": "String",
+        "metadata": {
+            "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+        }
     },
     "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "vNet",
-      "metadata": {
-        "description": "Name of the VNET"
-      }
+        "defaultValue": "vNet",
+        "type": "String",
+        "metadata": {
+            "description": "Name of the VNET"
+        }
     },
     "subnetName": {
-      "type": "string",
-      "defaultValue": "Subnet",
-      "metadata": {
-        "description": "Name of the subnet in the virtual network"
-      }
+        "defaultValue": "Subnet",
+        "type": "String",
+        "metadata": {
+            "description": "Name of the subnet in the virtual network"
+        }
     },
     "networkSecurityGroupName": {
-      "type": "string",
-      "defaultValue": "SecGroupNet",
-      "metadata": {
-        "description": "Name of the Network Security Group"
-      }
+        "defaultValue": "SecGroupNet",
+        "type": "String",
+        "metadata": {
+            "description": "Name of the Network Security Group"
+        }
+    },
+    "iotHubName": {
+        "defaultValue": "kakaiothub",
+        "type": "String",
+        "metadata": {
+            "description": "Specify the name of the Iot hub."
+        }
+    },
+    "iotDeviceName": {
+        "defaultValue": "kakaEdgeDevice",
+        "type": "String",
+        "metadata": {
+            "description": "Specify the name of the Iot Edge Device."
+        }
     }
   },
   "variables": {
-    "publicIpAddressName": "[concat(parameters('vmName'), 'PublicIP' )]",
-    "networkInterfaceName": "[concat(parameters('vmName'),'NetInt')]",
-    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]",
-    "osDiskType": "Standard_LRS",
-    "subnetAddressPrefix": "10.1.0.0/24",
-    "addressPrefix":  "10.1.0.0/16",
+    "resourceGroupName": "[resourceGroup().name]",
+    "managedIdentityName": "[concat('Managed_Identity',substring(uniqueString(subscription().id,variables('resourceGroupName')),1,4))]",
+    "scriptName": "GetDeviceConnectString",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -107,151 +120,363 @@
   },
   "resources": [
     {
-      "name": "[variables('networkInterfaceName')]",
-      "type": "Microsoft.Network/networkInterfaces",
+      "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-06-01",
-      "location": "[parameters('location')]",
+      "name": "CreatingManagedIdentity",
+      "properties": {
+          "mode": "Incremental",
+          "template": {
+              "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {},
+              "variables": {},
+              "resources": [
+                  {
+                      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+                      "name": "[variables('managedIdentityName')]",
+                      "apiVersion": "2018-11-30",
+                      "location": "[parameters('location')]"
+                  }
+              ]
+          }
+      },
+      "resourceGroup": "[variables('resourceGroupName')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "CreatingRoleAssignments",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
-        "[resourceId('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
+        "CreatingManagedIdentity"
       ],
       "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              },
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIpAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+        "mode": "Incremental",
+        "expressionEvaluationOptions": {
+            "scope": "inner"
+        },
+        "parameters": {
+            "managedIdentityName": {
+                "value": "[variables('managedIdentityName')]"
+            }
+        },
+        "template": {
+          "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "managedIdentityName": {
+              "type": "String"
+            }
+          },
+          "variables": {},
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2018-09-01-preview",
+              "name": "[guid(concat(resourceGroup().id, 'contributor'))]",
+              "properties": {
+                "roleDefinitionId": "[concat(resourceGroup().id, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentityName')), '2018-11-30').principalId]",
+                "scope": "[resourceGroup().id]",
+                "principalType": "ServicePrincipal"
               }
             }
-          }
-        ],
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('networkSecurityGroupName'))]"
-        }
-      }
-    },
-    {
-      "name": "[parameters('networkSecurityGroupName')]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2020-06-01",
-      "location": "[parameters('location')]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "SSH",
-            "properties": {
-              "priority": 1000,
-              "protocol": "TCP",
-              "access": "Allow",
-              "direction": "Inbound",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "[parameters('virtualNetworkName')]",
-      "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2020-06-01",
-      "location": "[parameters('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
           ]
-        },
-        "subnets": [
-          {
-            "name": "[parameters('subnetName')]",
-            "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefix')]",
-              "privateEndpointNetworkPolicies": "Enabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "[variables('publicIpAddressName')]",
-      "type": "Microsoft.Network/publicIpAddresses",
-      "apiVersion": "2020-06-01",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Basic",
-        "tier": "Regional"
+        }
       },
-      "properties": {
-        "publicIpAllocationMethod": "Dynamic",
-        "publicIPAddressVersion": "IPv4",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
-        },
-        "idleTimeoutInMinutes": 4
-      }
+      "resourceGroup": "[variables('resourceGroupName')]"
     },
     {
-      "name": "[parameters('vmName')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2020-06-01",
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2019-10-01-preview",
+      "name": "[variables('scriptName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+          "CreatingRoleAssignments",
+          "CreatingManagedIdentity"
+      ],
+      "kind": "AzureCLI",
+      "identity": {
+          "type": "UserAssigned",
+          "userAssignedIdentities": {
+              "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentityName'))]": {}
+          }
+      },
+      "properties": {
+        "forceUpdateTag": "1",
+        "azCliVersion": "2.9.1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/kaka-lin/azure-notes/master/arm-template/templates/vm-linux-iotedge/scripts/get-device-connect-string.sh",
+        "supportingScriptUris": [],
+        "environmentVariables": [
+          {
+            "name": "RESOURCE_GROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "IOTHUB_NAME",
+            "value": "[parameters('iotHubName')]"
+          },
+          {
+            "name": "DEVICE_NAME",
+            "value": "[parameters('iotDeviceName')]"
+          }
+        ],
+        "retentionInterval": "P1D",
+        "timeout": "PT30M",
+        "containerSettings": {},
+        "cleanupPreference": "OnSuccess"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-06-01",
+      "name": "CreateVM",
+      "dependsOn": [
+        "[variables('scriptName')]"
       ],
       "properties": {
-        "hardwareProfile": {
-            "vmSize": "[parameters('VmSize')]"
+        "mode": "Incremental",
+        "expressionEvaluationOptions": {
+            "scope": "inner"
         },
-        "osProfile": {
-          "computerName": "[parameters('vmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPasswordOrKey')]",
-          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "Canonical",
-            "offer": "UbuntuServer",
-            "sku": "[parameters('ubuntuOSVersion')]",
-            "version": "latest"
+        "parameters": {
+          "vmName": {
+            "value": "[parameters('vmName')]"
           },
-          "osDisk": {
-            "createOption": "fromImage",
-            "managedDisk": {
-              "storageAccountType":  "[variables('osDiskType')]"
-            }
+          "location": {
+            "value": "[resourceGroup().location]"
+          },
+          "ubuntuOSVersion": {
+            "value": "[parameters('ubuntuOSVersion')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "authenticationType": {
+            "value": "[parameters('authenticationType')]"
+          },
+          "adminPasswordOrKey": {
+            "value": "[parameters('adminPasswordOrKey')]"
+          },
+          "dnsLabelPrefix": {
+            "value": "[parameters('dnsLabelPrefix')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "subnetName": {
+            "value": "[parameters('subnetName')]"
+          },
+          "networkSecurityGroupName": {
+            "value": "[parameters('networkSecurityGroupName')]"
+          },
+          "linuxConfiguration": {
+            "value": "[variables('linuxConfiguration')]"
+          },
+          "deviceConnectionString": {
+            "value": "[reference(variables('scriptName')).outputs.deviceinfo.deviceConnectString]"
           }
         },
-        "networkProfile": {
-          "networkInterfaces": [{
-            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
-          }]
+        "template": {
+          "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "vmName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "ubuntuOSVersion": {
+              "type": "string"
+            },
+            "vmSize": {
+              "type": "string"
+            },
+            "adminUsername": {
+              "type": "string"
+            },
+            "authenticationType": {
+              "type": "string"
+            },
+            "adminPasswordOrKey": {
+              "type": "SecureString"
+            },
+            "dnsLabelPrefix": {
+              "type": "string"
+            },
+            "virtualNetworkName": {
+              "type": "string"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "networkSecurityGroupName": {
+              "type": "string"
+            },
+            "linuxConfiguration": {
+              "type": "object"
+            },
+            "deviceConnectionString": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "publicIpAddressName": "[concat(parameters('vmName'), 'PublicIP' )]",
+            "networkInterfaceName": "[concat(parameters('vmName'),'NetInt')]",
+            "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]",
+            "osDiskType": "Standard_LRS",
+            "subnetAddressPrefix": "10.1.0.0/24",
+            "addressPrefix": "10.1.0.0/16"
+          },
+          "resources": [
+            {
+              "name": "[variables('networkInterfaceName')]",
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-06-01",
+              "location": "[parameters('location')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups/', parameters('networkSecurityGroupName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
+              ],
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "subnet": {
+                        "id": "[variables('subnetRef')]"
+                      },
+                      "privateIPAllocationMethod": "Dynamic",
+                      "publicIpAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                      }
+                    }
+                  }
+                ],
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('networkSecurityGroupName'))]"
+                }
+              }
+            },
+            {
+              "name": "[parameters('networkSecurityGroupName')]",
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2020-06-01",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "SSH",
+                    "properties": {
+                      "priority": 1000,
+                      "protocol": "TCP",
+                      "access": "Allow",
+                      "direction": "Inbound",
+                      "sourceAddressPrefix": "*",
+                      "sourcePortRange": "*",
+                      "destinationAddressPrefix": "*",
+                      "destinationPortRange": "22"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "[parameters('virtualNetworkName')]",
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-06-01",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[variables('addressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('subnetName')]",
+                    "properties": {
+                      "addressPrefix": "[variables('subnetAddressPrefix')]",
+                      "privateEndpointNetworkPolicies": "Enabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "[variables('publicIpAddressName')]",
+              "type": "Microsoft.Network/publicIpAddresses",
+              "apiVersion": "2020-06-01",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+              },
+              "properties": {
+                "publicIpAllocationMethod": "Dynamic",
+                "publicIPAddressVersion": "IPv4",
+                "dnsSettings": {
+                  "domainNameLabel": "[parameters('dnsLabelPrefix')]"
+                },
+                "idleTimeoutInMinutes": 4
+              }
+            },
+            {
+              "name": "[parameters('vmName')]",
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-06-01",
+              "location": "[parameters('location')]",
+              "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+              ],
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('VmSize')]"
+                },
+                "osProfile": {
+                  "computerName": "[parameters('vmName')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPasswordOrKey')]",
+                  "customData": "[base64(concat('#cloud-config\n\napt:\n  preserve_sources_list: true\n  sources:\n    msft.list:\n      source: \"deb https://packages.microsoft.com/ubuntu/18.04/multiarch/prod bionic main\"\n      key: |\n        -----BEGIN PGP PUBLIC KEY BLOCK-----\n        Version: GnuPG v1.4.7 (GNU/Linux)\n\n        mQENBFYxWIwBCADAKoZhZlJxGNGWzqV+1OG1xiQeoowKhssGAKvd+buXCGISZJwT\n        LXZqIcIiLP7pqdcZWtE9bSc7yBY2MalDp9Liu0KekywQ6VVX1T72NPf5Ev6x6DLV\n        7aVWsCzUAF+eb7DC9fPuFLEdxmOEYoPjzrQ7cCnSV4JQxAqhU4T6OjbvRazGl3ag\n        OeizPXmRljMtUUttHQZnRhtlzkmwIrUivbfFPD+fEoHJ1+uIdfOzZX8/oKHKLe2j\n        H632kvsNzJFlROVvGLYAk2WRcLu+RjjggixhwiB+Mu/A8Tf4V6b+YppS44q8EvVr\n        M+QvY7LNSOffSO6Slsy9oisGTdfE39nC7pVRABEBAAG0N01pY3Jvc29mdCAoUmVs\n        ZWFzZSBzaWduaW5nKSA8Z3Bnc2VjdXJpdHlAbWljcm9zb2Z0LmNvbT6JATUEEwEC\n        AB8FAlYxWIwCGwMGCwkIBwMCBBUCCAMDFgIBAh4BAheAAAoJEOs+lK2+EinPGpsH\n        /32vKy29Hg51H9dfFJMx0/a/F+5vKeCeVqimvyTM04C+XENNuSbYZ3eRPHGHFLqe\n        MNGxsfb7C7ZxEeW7J/vSzRgHxm7ZvESisUYRFq2sgkJ+HFERNrqfci45bdhmrUsy\n        7SWw9ybxdFOkuQoyKD3tBmiGfONQMlBaOMWdAsic965rvJsd5zYaZZFI1UwTkFXV\n        KJt3bp3Ngn1vEYXwijGTa+FXz6GLHueJwF0I7ug34DgUkAFvAs8Hacr2DRYxL5RJ\n        XdNgj4Jd2/g6T9InmWT0hASljur+dJnzNiNCkbn9KbX7J/qK1IbR8y560yRmFsU+\n        NdCFTW7wY0Fb1fWJ+/KTsC4=\n        =J6gs\n        -----END PGP PUBLIC KEY BLOCK----- \npackages:\n  - moby-cli\n  - libiothsm-std\n  - moby-engine\nruncmd:\n  - |\n      set -x\n      (\n        # Wait for docker daemon to start\n        while [ $(ps -ef | grep -v grep | grep docker | wc -l) -le 0 ]; do \n          sleep 3\n        done\n\n        # Prevent iotedge from starting before the device connection string is set in config.yaml\n        sudo ln -s /dev/null /etc/systemd/system/iotedge.service\n        apt install iotedge\n        sed -i \"s#\\(device_connection_string: \\).*#\\1\\\"', parameters('deviceConnectionString'), '\\\"#g\" /etc/iotedge/config.yaml \n        systemctl unmask iotedge\n        systemctl start iotedge\n      ) &\n'))]",
+                  "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), parameters('linuxConfiguration'))]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "[parameters('ubuntuOSVersion')]",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "fromImage",
+                    "managedDisk": {
+                      "storageAccountType": "[variables('osDiskType')]"
+                    }
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "dcs": {
+              "type": "string",
+              "value": "[parameters('deviceConnectionString')]"
+            }
+          }
         }
       }
     }
-  ],
-  "outputs": {
-    "adminUsername": {
-      "type": "string",
-      "value": "[parameters('adminUsername')]"
-    },
-    "hostname": {
-      "type": "string",
-      "value": "[reference(variables('publicIPAddressName')).dnsSettings.fqdn]"
-    },
-    "sshCommand": {
-      "type": "string",
-      "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(variables('publicIPAddressName')).dnsSettings.fqdn)]"
-    }
-  }
+  ]
 }
