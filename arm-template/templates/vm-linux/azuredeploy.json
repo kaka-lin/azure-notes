@@ -155,6 +155,19 @@
               "destinationAddressPrefix": "*",
               "destinationPortRange": "22"
             }
+          },
+          {
+            "name": "Port_8080",
+            "properties": {
+              "priority": 1100,
+              "protocol": "*",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "8080"
+            }
           }
         ]
       }
