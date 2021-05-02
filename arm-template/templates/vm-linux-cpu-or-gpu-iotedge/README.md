@@ -1,6 +1,6 @@
-# Deploy a CPU or GPU based VM with IoT Edge
+# Deploy a CPU or NVIDIA GPU-backed VM with IoT Edge
 
-This will deploy a CPU or GPU based VM with IoT Edge pre-installed
+This will deploy a CPU or `NVIDIA GPU-backed` with IoT Edge pre-installed
 
 ## Reference: [Azure/iotedge-vm-deploy](https://github.com/Azure/iotedge-vm-deploy)
 
@@ -25,6 +25,34 @@ azuredeploy.json
     }
 }
 ```
+
+### Install NVIDIA Driver
+
+azuredeploy.json
+```json
+{
+  "name": "<myExtensionName>",
+  "type": "extensions",
+  "apiVersion": "2015-06-15",
+  "location": "<location>",
+  "dependsOn": [
+    "[concat('Microsoft.Compute/virtualMachines/', <myVM>)]"
+  ],
+  "properties": {
+    "publisher": "Microsoft.HpcCompute",
+    "type": "NvidiaGpuDriverLinux",
+    "typeHandlerVersion": "1.3",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+    }
+  }
+}
+```
+
+Reference:
+  - [NVIDIA GPU Driver Extension for Linux](https://docs.microsoft.com/zh-tw/azure/virtual-machines/extensions/hpccompute-gpu-linux)
+  - [baptisteohanes/Demo_AzureNseriesVMAutomation](https://github.com/baptisteohanes/Demo_AzureNseriesVMAutomation)
+  - [michhar/darknet-azure-vm-ubuntu-18.04 ](https://github.com/michhar/darknet-azure-vm-ubuntu-18.04)
 
 ### Specific version of `IoT Edge`
 

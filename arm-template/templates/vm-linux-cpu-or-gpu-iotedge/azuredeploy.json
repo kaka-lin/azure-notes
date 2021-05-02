@@ -480,7 +480,27 @@
                     }
                   ]
                 }
-              }
+              },
+              "resources": [
+                {
+                  "condition": "[equals(parameters('vmType'), 'gpu')]",
+                  "name": "InstallNvidiaGpuDriverLinux",
+                  "type": "extensions",
+                  "apiVersion": "2015-06-15",
+                  "location": "[resourceGroup().location]",
+                  "dependsOn": [
+                    "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('vmName'), '-', parameters('vmType')))]"
+                  ],
+                  "properties": {
+                    "publisher": "Microsoft.HpcCompute",
+                    "type": "NvidiaGpuDriverLinux",
+                    "typeHandlerVersion": "1.3",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                    }
+                  }
+                }
+              ]
             }
           ],
           "outputs": {
