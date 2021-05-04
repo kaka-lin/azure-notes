@@ -104,7 +104,7 @@
       "properties": {
         "forceUpdateTag": "1",
         "azCliVersion": "2.9.1",
-        "primaryScriptUri": "https://raw.githubusercontent.com/kaka-lin/azure-notes/creat-edgedevice/arm-template/templates/iothub-with-iotedge-id/scripts/create.sh",
+        "primaryScriptUri": "https://raw.githubusercontent.com/kaka-lin/azure-notes/master/arm-template/templates/iothub-with-iotedge-id/scripts/create.sh",
         "supportingScriptUris": [],
         "environmentVariables": [
           {
