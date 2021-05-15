@@ -15,5 +15,5 @@ My Azure's learning notes
 
 [Azure Resource Manager Template documentation](https://docs.microsoft.com/zh-tw/azure/azure-resource-manager/templates/)
 
-- [Quickstart: Create ARM templates with Visual Studio Code](arm-template/quickstarts_create_arm_template.md)
-- [The structure and syntax of ARM templates](arm-template/the_structure_and_syntax.md)
+- [00. Quickstart: Create ARM templates with Visual Studio Code](arm-template/00_quickstarts_create_arm_template.md)
+- [01. The structure and syntax of ARM templates](arm-template/01_the_structure_and_syntax.md)
