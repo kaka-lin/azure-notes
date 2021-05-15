@@ -33,7 +33,7 @@
       "sku": {
         "name": "[parameters('sku')]"
       },
-      "kind": "CognitiveServices",
+      "kind": "CustomVision.Training",
       "properties": {
         "statisticsEnabled": false
       }

@@ -37,16 +37,7 @@
       "metadata": {
         "description": "The number of IoT Hub units. (If Iot Hub is existed then you can ignore this item)"
       }
-    },
-    "provisioningServiceName": {
-      "type": "string",
-      "metadata": {
-        "description": "Specify the name of the provisioning service."
-      }
     }
-  },
-  "variables": {
-    "iotHubKeyName": "iothubowner"
   },
   "resources": [
     {
@@ -59,26 +50,13 @@
         "name": "[parameters('skuName')]",
         "capacity": "[parameters('skuUnits')]"
       },
-      "properties": {}
-    },
-    {
-      "type": "Microsoft.Devices/provisioningServices",
-      "apiVersion": "2020-01-01",
-      "name": "[parameters('provisioningServiceName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[parameters('skuName')]",
-        "capacity": "[parameters('skuUnits')]"
-      },
-      "dependsOn": [ "[parameters('iotHubName')]" ],
       "properties": {
-        "iotHubs": [
-          {
-            "connectionString": "[concat('HostName=', reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName, ';SharedAccessKeyName=', variables('iotHubKeyName'), ';SharedAccessKey=', listkeys(resourceId('Microsoft.Devices/Iothubs/Iothubkeys', parameters('iotHubName'), variables('iotHubKeyName')), '2020-03-01').primaryKey)]",
-            "location": "[parameters('location')]",
-            "name": "[reference(resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))).hostName]"
+        "eventHubEndpoints": {
+          "events": {
+            "retentionTimeInDays": 1,
+            "partitionCount": 2
           }
-        ]
+        }
       }
     }
   ]
