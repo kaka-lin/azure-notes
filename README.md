@@ -7,7 +7,9 @@ My Azure's learning notes
 ## [Azure IoT Edge](https://github.com/kaka-lin/azure-notes/tree/master/iotedge)
 
 - [00. Quickstarts: Deploy code to a linux device](iotedge/00_quickstarts_deploy_code.md)
-- [01. Deploy Azure IoT Edge modules from Visual Studio Code](iotedge/01_deploy_moduls.md)
+- [01. Deploy Azure IoT Edge modules from Visual Studio Code](iotedge/01_deploy_modules.md)
+- [02. Understand Azure IoT Edge modules](iotedge/02_understand_modules.md)
+- [03. Develop and deploy a Python IoT Edge module using Linux containers](iotedge/03_develop_modules.md)
 
 ## [Azure Resource Manager Template](https://github.com/kaka-lin/azure-notes/tree/master/arm-template)
 
