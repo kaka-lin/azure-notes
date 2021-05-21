@@ -1,0 +1,134 @@
+{
+  "$schema-template": "2.0.0",
+  "modulesContent": {
+    "$edgeAgent": {
+      "properties.desired": {
+        "schemaVersion": "1.0",
+        "runtime": {
+          "type": "docker",
+          "settings": {
+            "minDockerVersion": "v1.25",
+            "loggingOptions": "",
+            "registryCredentials": {
+              "REGISTRY0": {
+                "username": "$CONTAINER_REGISTRY_USERNAME",
+                "password": "$CONTAINER_REGISTRY_PASSWORD",
+                "address": "$CONTAINER_REGISTRY_ADDRESS"
+              }
+            }
+          }
+        },
+        "systemModules": {
+          "edgeAgent": {
+            "type": "docker",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-agent:1.0",
+              "createOptions": {}
+            }
+          },
+          "edgeHub": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-hub:1.0",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "5671/tcp": [
+                      {
+                        "HostPort": "5671"
+                      }
+                    ],
+                    "8883/tcp": [
+                      {
+                        "HostPort": "8883"
+                      }
+                    ],
+                    "443/tcp": [
+                      {
+                        "HostPort": "443"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "modules": {
+          "web": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.web}",
+              "createOptions": {
+                "ExposedPorts": {
+                  "5000/tcp": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "5000/tcp": [
+                      {
+                        "HostIp": "",
+                        "HostPort": "5000"
+                      }
+                    ]
+                  },
+                  "LogConfig": {
+                    "Type": "",
+                    "Config": {}
+                  }
+                },
+                "Labels": {
+                  "com.docker.compose.project": "flask-redis",
+                  "com.docker.compose.service": "web",
+                  "com.docker.compose.oneoff": "False",
+                  "com.docker.compose.container-number": "1",
+                  "com.docker.compose.version": "1.24.0",
+                  "com.docker.compose.config-hash": "cb16348654cf66343e48ba18852da1f3b3b753d65509dfee02f857416326de47"
+                }
+              }
+            }
+          },
+          "redis": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "redis:alpine",
+              "createOptions": {
+                "HostConfig": {
+                  "LogConfig": {
+                    "Type": "",
+                    "Config": {}
+                  }
+                },
+                "Labels": {
+                  "com.docker.compose.project": "flask-redis",
+                  "com.docker.compose.service": "redis",
+                  "com.docker.compose.oneoff": "False",
+                  "com.docker.compose.container-number": "1",
+                  "com.docker.compose.version": "1.24.0",
+                  "com.docker.compose.config-hash": "f9b97a0bc8ede509463a85bf549e94cc240cf3aef3838e431953f0bc14ab92ea"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "$edgeHub": {
+      "properties.desired": {
+        "schemaVersion": "1.0",
+        "routes": {},
+        "storeAndForwardConfiguration": {
+          "timeToLiveSecs": 7200
+        }
+      }
+    }
+  }
+}
