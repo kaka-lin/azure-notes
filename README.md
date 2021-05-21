@@ -10,6 +10,7 @@ My Azure's learning notes
 - [01. Deploy Azure IoT Edge modules from Visual Studio Code](iotedge/01_deploy_modules.md)
 - [02. Understand Azure IoT Edge modules](iotedge/02_understand_modules.md)
 - [03. Develop and deploy a Python IoT Edge module using Linux containers](iotedge/03_develop_modules.md)
+- [04. Deploy `Docker Compose` project to `Azure IoT Edge Solution`](iotedge/04_deploy_docker_compose_project.md)
 
 ## [Azure Resource Manager Template](https://github.com/kaka-lin/azure-notes/tree/master/arm-template)
 
